@@ -5,7 +5,7 @@ import uvicorn
 from app.api import predict, viz
 
 app = FastAPI(
-    title='YOUR-PRODUCT-TEAM-NAME DS API'',
+    title='YOUR-PRODUCT-TEAM-NAME DS API',
     description='Replace this placeholder text',
     version='0.1',
     docs_url='/',
