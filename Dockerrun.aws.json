@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "YOUR-DOCKER-HUB-ID/YOUR-IMAGE-NAME",
+    "Name": "tmbern/labs25-b2p-teamc-ds",
     "Update": "true"
   },
   "Ports": [
