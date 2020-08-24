@@ -4,9 +4,24 @@ import uvicorn
 
 from app.api import predict, viz
 
+from db_files import models, schemas
+from db_files.database import SessionLocal, engine
+
+# create_all when used on metadata will only create tables that dont
+# already exist in the database. https://docs.sqlalchemy.org/en/13/core/engines.html
+models.Base.metadata.create_all(bind=engine)
+
+# Session Dependency
+def get_db():
+    try:
+        db = SessionLocal()
+        yield db
+    finally:
+        db.close()
+
 app = FastAPI(
-    title='YOUR-PRODUCT-TEAM-NAME DS API',
-    description='Replace this placeholder text',
+    title='Labs25-B2P-TeamC-DS',
+    description='B2P DS API',
     version='0.1',
     docs_url='/',
 )
