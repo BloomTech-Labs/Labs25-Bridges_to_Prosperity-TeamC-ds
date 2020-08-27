@@ -2,33 +2,13 @@ from fastapi import APIRouter, HTTPException, Depends
 from db_files.database import SessionLocal, engine
 from db_files import models, schemas
 from typing import List
-from psycopg2.extensions import register_adapter, AsIs
 from sqlalchemy.orm import Session
 import pandas as pd
 import json
 import numpy
-from app.helpers import parse_records
+from app.helpers import parse_records, get_db, register_adapter
 
 router = APIRouter()
-
-# Session Dependency
-def get_db():
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
-
-# adapt numpy_int64
-# https://rehalcon.blogspot.com/2010/03/sqlalchemy-programmingerror-cant-adapt.html
-def adapt_numpy_int64(numpy_int64):
-    return AsIs(numpy_int64)
-
-register_adapter(numpy.int64, adapt_numpy_int64)
-
-# create_all when used on metadata will only create tables that dont
-# already exist in the database. https://docs.sqlalchemy.org/en/13/core/engines.html
-
 
 @router.get("/projects", response_model=List[schemas.Project])
 async def show_records(db: Session = Depends(get_db)):
@@ -47,6 +27,8 @@ async def refresh(csv_file='https://raw.githubusercontent.com/Lambda-School-Labs
     drops all tables from current database; creates all tables; and populates tables with the 
     final cleaned data values received from Bridge to Prosperity
     '''
+    register_adapter(numpy.int64, adapt_numpy_int64)
+
     # connect to the current session of database.
     db = SessionLocal()
 

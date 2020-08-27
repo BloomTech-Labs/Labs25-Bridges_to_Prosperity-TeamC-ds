@@ -1,3 +1,6 @@
+from db_files.database import SessionLocal
+from psycopg2.extensions import register_adapter, AsIs
+
 def parse_records(database_records):
     """
     A helper method for converting a list of database record objects into a list of dictionaries, so they can be returned as JSON
@@ -17,3 +20,17 @@ def parse_records(database_records):
         del parsed_record["_sa_instance_state"]
         parsed_records.append(parsed_record)
     return parsed_records
+
+# Session Dependency
+def get_db():
+    try:
+        db = SessionLocal()
+        yield db
+    finally:
+        db.close()
+
+# adapt numpy_int64
+# https://rehalcon.blogspot.com/2010/03/sqlalchemy-programmingerror-cant-adapt.html
+def adapt_numpy_int64(numpy_int64):
+    return AsIs(numpy_int64)
+
