@@ -7,12 +7,15 @@ from db_files.database import Base
 class Project(Base):
     __tablename__ = 'bridge_project'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer)
+    project_code = Column(Integer, primary_key=True)
+    bridge_name = Column(String)
+    bridge_type = Column(String)
     latitude = Column(Float)
     longitude = Column(Float)
-    district_id = Column(Integer, ForeignKey('districts.id'))
+    district_id = Column(Integer)
     district_name = Column(String)
-    province_id = Column(Integer, ForeignKey('provinces.id'))
+    province_id = Column(Integer)
     province_name = Column(String)
     project_stage = Column(String)
     individuals_served = Column(Integer)

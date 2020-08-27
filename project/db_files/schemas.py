@@ -7,6 +7,9 @@ from pydantic import BaseModel
 #  https://towardsdatascience.com/fastapi-cloud-database-loading-with-python-1f531f1d438a
 class Project(BaseModel):
     id: int
+    project_code: int
+    bridge_name: str
+    bridge_type: str
     latitude: float
     longitude: float
     district_id: int
