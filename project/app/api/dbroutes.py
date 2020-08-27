@@ -2,10 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends
 from db_files.database import SessionLocal, engine
 from db_files import models, schemas
 from typing import List
+from psycopg2.extensions import register_adapter, AsIs
+from sqlalchemy.orm import Session
 import pandas as pd
 import json
-
-
+import numpy
+from app.helpers import parse_records
 
 router = APIRouter()
 
@@ -17,25 +19,34 @@ def get_db():
     finally:
         db.close()
 
+# adapt numpy_int64
+# https://rehalcon.blogspot.com/2010/03/sqlalchemy-programmingerror-cant-adapt.html
+def adapt_numpy_int64(numpy_int64):
+    return AsIs(numpy_int64)
+
+register_adapter(numpy.int64, adapt_numpy_int64)
+
 # create_all when used on metadata will only create tables that dont
 # already exist in the database. https://docs.sqlalchemy.org/en/13/core/engines.html
 
 
-# @router.get("/projects/", response_model=List[schemas.Project])
-# async def show_records(db: Session = Depends(get_db)):
-#     '''
-#     uses database dependency function from main.py.
-#     opens a new session to the database.
-#     runs queries database for all data and returns as json
-#     closes database connection.
+@router.get("/projects", response_model=List[schemas.Project])
+async def show_records(db: Session = Depends(get_db)):
+    '''
+    Query the Projects table and returns all records
+    as a list of dictionaries.
     
-#     '''
-#     projects = db.query(models.Project).all()
-#     return json.dumps([dict(project) for project in projects])
-#     # return projects
+    '''
+    projects = db.query(models.Project).all()
+    return parse_records(projects)
 
 @router.get('/db-refresh')
 async def refresh(csv_file='https://raw.githubusercontent.com/Lambda-School-Labs/Labs25-Bridges_to_Prosperity-TeamC-ds/main/final_csv/final.csv'):
+
+    '''
+    drops all tables from current database; creates all tables; and populates tables with the 
+    final cleaned data values received from Bridge to Prosperity
+    '''
     # connect to the current session of database.
     db = SessionLocal()
 
@@ -51,10 +62,10 @@ async def refresh(csv_file='https://raw.githubusercontent.com/Lambda-School-Labs
     df[[' GPS (Latitude)', 'GPS (Longitude)', 'Individuals Directly Served']] = df[[' GPS (Latitude)', 'GPS (Longitude)', 'Individuals Directly Served']].replace('Unknown', 0.0)
 
     # update the types to match the database column field types.
-    df[['Province', 'District', 'Bridge Site Name', 'Project Stage', 'Bridge Type']].astype(str)
-    df[[' GPS (Latitude)', 'GPS (Longitude)']].astype(float)
-    df['Individuals Directly Served'].astype(float).astype(int)
-    df[['Project Code', 'Prov_ID', 'District_ID']].astype(int)
+    df[['Province', 'District', 'Bridge Site Name', 'Project Stage', 'Bridge Type']] = df[['Province', 'District', 'Bridge Site Name', 'Project Stage', 'Bridge Type']].astype(str)
+    df[[' GPS (Latitude)', 'GPS (Longitude)']] = df[[' GPS (Latitude)', 'GPS (Longitude)']].astype(float)
+    df['Individuals Directly Served'] = df['Individuals Directly Served'].astype(float).astype(int)
+    df[['Project Code', 'Prov_ID', 'District_ID']] = df[['Project Code', 'Prov_ID', 'District_ID']].astype(int)
 
     # drop the columns that will not be added to the database table, and get rid of duplicate project codes. 
     # we only want one instance for each bridge (project code), since we arent adding the communities served to the database in this itteration.
