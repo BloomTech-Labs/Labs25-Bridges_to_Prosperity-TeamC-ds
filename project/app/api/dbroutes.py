@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from psycopg2.extensions import register_adapter, AsIs
 from db_files.database import SessionLocal, engine
 from db_files import models, schemas
 from typing import List
@@ -6,7 +7,7 @@ from sqlalchemy.orm import Session
 import pandas as pd
 import json
 import numpy
-from app.helpers import parse_records, get_db, register_adapter
+from app.helpers import parse_records, get_db, adapt_numpy_int64
 
 router = APIRouter()
 
