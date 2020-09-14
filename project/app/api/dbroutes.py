@@ -22,7 +22,7 @@ async def show_records(db: Session = Depends(get_db)):
     return parse_records(projects)
 
 @router.get('/db-refresh')
-async def refresh(csv_file='https://raw.githubusercontent.com/Lambda-School-Labs/Labs25-Bridges_to_Prosperity-TeamC-ds/main/final_csv/final.csv'):
+async def refresh(csv_file='https://raw.githubusercontent.com/Lambda-School-Labs/Labs25-Bridges_to_Prosperity-TeamC-ds/main/final_csv/Final_with_gov_ID.csv'):
 
     '''
     drops all tables from current database; creates all tables; and populates tables with the 
@@ -48,29 +48,29 @@ async def refresh(csv_file='https://raw.githubusercontent.com/Lambda-School-Labs
     df[['Province', 'District', 'Bridge Site Name', 'Project Stage', 'Bridge Type']] = df[['Province', 'District', 'Bridge Site Name', 'Project Stage', 'Bridge Type']].astype(str)
     df[[' GPS (Latitude)', 'GPS (Longitude)']] = df[[' GPS (Latitude)', 'GPS (Longitude)']].astype(float)
     df['Individuals Directly Served'] = df['Individuals Directly Served'].astype(float).astype(int)
-    df[['Project Code', 'Prov_ID', 'District_ID']] = df[['Project Code', 'Prov_ID', 'District_ID']].astype(int)
+    df[['Project Code', 'Prov_ID', 'Dist_ID']] = df[['Project Code', 'Prov_ID', 'Dist_ID']].astype(int)
 
     # drop the columns that will not be added to the database table, and get rid of duplicate project codes. 
     # we only want one instance for each bridge (project code), since we arent adding the communities served to the database in this itteration.
-    df = df.drop(columns=['Original_Community_col', 'Community_Served', 'Cell', 'Form: Form Name', 'Assessment Date', 'Cell_ID', 'Sector', 'Sector_ID']).drop_duplicates(subset='Project Code')
+    df = df.drop(columns=['Original_Community_col', 'Community_Served', 'Cell', 'Form: Form Name', 'Assessment Date', 'Cell_ID', 'Sector', 'Sect_ID','Unnamed: 0']).drop_duplicates(subset='Project Code')
    
         
     # itterate over the dataframe and for each row create a new db record. Add each db record to the table, and then commit and close the db connection.
     for i in df.index:
         db_record = models.Project(
             id = i,
-            project_code = df.iloc[i]['Project Code'],
-            bridge_name = df.iloc[i]['Bridge Site Name'],
-            bridge_type = df.iloc[i]['Bridge Type'],
-            latitude = df.iloc[i][' GPS (Latitude)'],
-            longitude = df.iloc[i]['GPS (Longitude)'],
-            district_id = df.iloc[i]['District_ID'],
-            district_name = df.iloc[i]['District'],
-            province_id = df.iloc[i]['Prov_ID'],
-            province_name = df.iloc[i]['Province'],
-            project_stage = df.iloc[i]['Project Stage'],
+            project_code = df.loc[i]['Project Code'],
+            bridge_name = df.loc[i]['Bridge Site Name'],
+            bridge_type = df.loc[i]['Bridge Type'],
+            latitude = df.loc[i][' GPS (Latitude)'],
+            longitude = df.loc[i]['GPS (Longitude)'],
+            district_id = df.loc[i]['Dist_ID'],
+            district_name = df.loc[i]['District'],
+            province_id = df.loc[i]['Prov_ID'],
+            province_name = df.loc[i]['Province'],
+            project_stage = df.loc[i]['Project Stage'],
             bridge_image = 'Waiting on Data',
-            individuals_served = df.iloc[i]['Individuals Directly Served']
+            individuals_served = df.loc[i]['Individuals Directly Served']
             )
             # add the record to table
         db.add(db_record)
